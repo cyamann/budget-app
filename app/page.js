@@ -1,10 +1,9 @@
 "use client";
 import { currencyFormatter } from '../app/lib/utils';
-import ExpenseCategoryItem from '@/components/ExpenseCategoryItem';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from "react-chartjs-2";
-import { useState } from 'react';
 import Modal from '@/components/Modal';
+import { useState, useEffect } from 'react';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -13,15 +12,30 @@ export default function Home() {
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [savings, setSavings] = useState(100);
   const [expenses, setExpenses] = useState([
-    { id: 1, title: "Eğlence", color: "#FF6384", amount: 500 },
-    { id: 2, title: "Kira", color: "#36A2EB", amount: 7000 },
-    { id: 3, title: "Yakıt", color: "#FFCE56", amount: 2000 },
+    { id: 1, title: "Eğlence", color: "#FF6384", amount: 500, date: new Date(), limit: 600 },
+    { id: 2, title: "Kira", color: "#36A2EB", amount: 7000, date: new Date(), limit: 8000 },
+    { id: 3, title: "Yakıt", color: "#FFCE56", amount: 2000, date: new Date(), limit: 2500 },
   ]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [limit, setLimit] = useState("");
 
   const handleAmountChange = (e) => setAmount(e.target.value);
   const handleDescriptionChange = (e) => setDescription(e.target.value);
+  const handleLimitChange = (e) => setLimit(e.target.value);
+
+  // Uyarı kontrolü
+  useEffect(() => {
+    expenses.forEach((expense) => {
+      if (expense.amount >= expense.limit * 0.8) {
+        alert(
+          `${expense.title} kategorisi için belirlenen bütçenin %80'ine ulaşıldı! (${currencyFormatter(
+            expense.amount
+          )}/${currencyFormatter(expense.limit)})`
+        );
+      }
+    });
+  }, [expenses]);
 
   const addIncomeHandler = (e) => {
     e.preventDefault();
@@ -37,8 +51,9 @@ export default function Home() {
   const addExpenseHandler = (e) => {
     e.preventDefault();
     const newExpenseAmount = parseFloat(amount);
+    const newExpenseLimit = parseFloat(limit);
 
-    if (!isNaN(newExpenseAmount) && newExpenseAmount > 0) {
+    if (!isNaN(newExpenseAmount) && newExpenseAmount > 0 && !isNaN(newExpenseLimit)) {
       setSavings((prevSavings) => Math.max(prevSavings - newExpenseAmount, 0));
       setExpenses((prevExpenses) => [
         ...prevExpenses,
@@ -47,6 +62,8 @@ export default function Home() {
           title: description || `Harcama ${prevExpenses.length + 1}`,
           color: getRandomColor(),
           amount: newExpenseAmount,
+          date: new Date(),
+          limit: newExpenseLimit,
         },
       ]);
     }
@@ -57,6 +74,7 @@ export default function Home() {
   const resetModal = () => {
     setAmount("");
     setDescription("");
+    setLimit("");
     setShowAddIncomeModal(false);
     setShowAddExpenseModal(false);
   };
@@ -69,28 +87,15 @@ export default function Home() {
       {/* Gelir Ekle Modal */}
       <Modal show={showAddIncomeModal} onClose={setShowAddIncomeModal}>
         <form onSubmit={addIncomeHandler} className="input-group">
-          <div className="input-group">
+          <div>
             <label htmlFor="gelirMiktar">Gelir Miktarı</label>
             <input
               name="gelirMiktar"
               value={amount}
               onChange={handleAmountChange}
               required
-              step={0.1}
               type="number"
-              min={0.1}
               placeholder="Gelir Miktarını Yazın"
-            />
-          </div>
-          <div className="flex flex-col gap-4">
-            <label htmlFor="gelirAçıklama">Açıklama</label>
-            <input
-              name="gelirAçıklama"
-              value={description}
-              onChange={handleDescriptionChange}
-              required
-              type="text"
-              placeholder="Açıklamayı Yazın"
             />
           </div>
           <button type="submit" className="btn btn-primary">
@@ -102,20 +107,18 @@ export default function Home() {
       {/* Harcama Ekle Modal */}
       <Modal show={showAddExpenseModal} onClose={setShowAddExpenseModal}>
         <form onSubmit={addExpenseHandler} className="input-group">
-          <div className="input-group">
+          <div>
             <label htmlFor="harcamaMiktar">Harcama Miktarı</label>
             <input
               name="harcamaMiktar"
               value={amount}
               onChange={handleAmountChange}
               required
-              step={0.1}
               type="number"
-              min={0.1}
               placeholder="Harcama Miktarını Yazın"
             />
           </div>
-          <div className="flex flex-col gap-4">
+          <div>
             <label htmlFor="harcamaAçıklama">Açıklama</label>
             <input
               name="harcamaAçıklama"
@@ -126,6 +129,17 @@ export default function Home() {
               placeholder="Açıklamayı Yazın"
             />
           </div>
+          <div>
+            <label htmlFor="bütçeLimiti">Bütçe Limiti</label>
+            <input
+              name="bütçeLimiti"
+              value={limit}
+              onChange={handleLimitChange}
+              required
+              type="number"
+              placeholder="Bütçe Limitini Yazın"
+            />
+          </div>
           <button type="submit" className="btn btn-primary">
             Ekle
           </button>
@@ -133,44 +147,46 @@ export default function Home() {
       </Modal>
 
       <main className="container max-w-2xl px-6 py-6 mx-auto">
-        <section className="py-3">
-          <small className="text-gray-400 text-md">Birikim</small>
-          <h2 className="text-4xl font-bold">{currencyFormatter(savings)}</h2>
+        <section>
+          <small>Birikim</small>
+          <h2>{currencyFormatter(savings)}</h2>
         </section>
 
-        <section className="flex items-center gap-2 py-3">
-          <button
-            onClick={() => setShowAddExpenseModal(true)}
-            className="btn btn-primary"
-          >
+        <section>
+          <button onClick={() => setShowAddExpenseModal(true)} className="btn btn-primary">
             + Harcamalar
           </button>
-          <button
-            onClick={() => setShowAddIncomeModal(true)}
-            className="btn btn-primary-outline"
-          >
+          <button onClick={() => setShowAddIncomeModal(true)} className="btn btn-secondary">
             + Gelirler
           </button>
         </section>
 
-        <section className="py-6">
-          <h3 className="text-2xl">İstatistikler</h3>
-          <div className="w-1/2 mx-auto">
-            <Doughnut
-              data={{
-                labels: expenses.map((expense) => expense.title),
-                datasets: [
-                  {
-                    label: "Harcamalar",
-                    data: expenses.map((expense) => expense.amount),
-                    backgroundColor: expenses.map((expense) => expense.color),
-                    borderColor: ["#18181b"],
-                    borderWidth: 5,
-                  },
-                ],
-              }}
-            />
-          </div>
+        <section>
+          <h3>İstatistikler</h3>
+          <Doughnut
+            data={{
+              labels: expenses.map((expense) => expense.title),
+              datasets: [
+                {
+                  label: "Harcamalar",
+                  data: expenses.map((expense) => expense.amount),
+                  backgroundColor: expenses.map((expense) => expense.color),
+                },
+              ],
+            }}
+          />
+        </section>
+
+        <section>
+          <h3>Giderler</h3>
+          <ul>
+            {expenses.map((expense) => (
+              <li key={expense.id}>
+                <strong>{expense.title}</strong> - {currencyFormatter(expense.amount)} (
+                {expense.date.toLocaleDateString()}) - Limit: {currencyFormatter(expense.limit)}
+              </li>
+            ))}
+          </ul>
         </section>
       </main>
     </>
