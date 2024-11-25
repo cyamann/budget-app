@@ -11,7 +11,7 @@ function Nav(){
       </div>
       <name>Hi Ceren</name>
     </div>
-    <nav className="flex items-center gap-2">
+    <nav className="flex items-center gap-4">
       <div>
       <IoStatsChart className="text-2xl"/>
       </div>
