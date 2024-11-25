@@ -3,7 +3,7 @@
 @tailwind utilities;
 @layer base{
     body{
-        @apply bg-slate-900 text-white;
+        @apply bg-slate-900 text-white relative;
     }
     button{
         @apply hover:scale-110 transition-all ;
