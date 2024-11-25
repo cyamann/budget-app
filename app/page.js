@@ -30,12 +30,26 @@ const DUMMY_DATA = [
 ];
 
 export default function Home() {
-  const [modalIsOpen, setModalIsOpen] = useState(true);
+  const [showAddIncomeModal, setShowAddIncomeModal] = useState(false);
 
   return (
     <>
-      <Modal show= {modalIsOpen} onClose={setModalIsOpen}>
-        <h3>Hello world</h3>
+      <Modal show= {showAddIncomeModal} onClose={setShowAddIncomeModal}>
+        <form className='input-group'>
+          <div className='input-group'>
+          <label htmlFor='miktar'>
+            Gelir Miktarı
+          </label>
+          <input name = "miktar" required step={0.1} type='number' min = {0.1} placeholder='Gelir Miktarını Yazın'/>
+          </div>
+          <div className='flex flex-col gap-4'>
+          <label htmlFor='Açıklama'>
+            Açıklama
+          </label>
+          <input name='açıklama' required  type='number'  placeholder='Açıklamayı Yazın'/>
+          </div>
+          <button type='submit' className='btn btn-primary'>Ekle</button>
+        </form>
       </Modal>
       
       <main className="container max-w-2xl px-6 py-6 mx-auto">
@@ -46,8 +60,8 @@ export default function Home() {
           <h2 className="text-4xl font-bold">{currencyFormatter(100)}</h2>
         </section>
         <section className="flex items-center gap-2 py-3">
-          <button onClick={()=> {setModalIsOpen(true)}}   className="btn btn-primary">+ Harcamalar</button>
-          <button className="btn btn-primary-outline">+ Gelirler</button>
+          <button onClick={()=> {setShowAddIncomeModal(true)}}   className="btn btn-primary">+ Harcamalar</button>
+          <button onClick={()=> {setShowAddIncomeModal(true)}} className="btn btn-primary-outline">+ Gelirler</button>
         </section>
 
         <section className="py-6">
